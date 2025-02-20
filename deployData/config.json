@@ -1,0 +1,6 @@
+{
+    "subscription_id": "776851b3-7a01-4304-92cb-70f54ac4dea8",
+    "resource_group": "ml-model-deployment-rg",
+    "workspace_name": "deploy-model-ws",
+    "region": "QatarCentral"
+}

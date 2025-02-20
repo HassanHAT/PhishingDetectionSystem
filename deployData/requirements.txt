@@ -1,0 +1,4 @@
+azureml-sdk==1.59.0
+numpy==1.23.5
+pandas==2.2.2
+scikit-learn==1.6.1
