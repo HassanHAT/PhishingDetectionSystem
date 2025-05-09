@@ -8,8 +8,7 @@ import '../widgets/bottom_nav_bar.dart';
 import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Message? newlyCheckedMessage;
-  const HomeScreen({Key? key, this.newlyCheckedMessage}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -50,10 +49,6 @@ class HomeScreenState extends State<HomeScreen> {
       final msgs = await phishingService.getUserMessages();
       setState(() {
         messages = msgs.where((m) => m.risk.level != 'low').toList();
-        if (widget.newlyCheckedMessage != null &&
-            widget.newlyCheckedMessage!.risk.level != 'low') {
-          messages.insert(0, widget.newlyCheckedMessage!);
-        }
       });
     } catch (e) {
       setState(() => errorMessage = 'Failed to load messages: $e');
@@ -103,7 +98,7 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Phishing Guard'),
+        title: const Text('PHISH GUARD'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
