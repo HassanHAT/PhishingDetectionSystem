@@ -40,6 +40,16 @@ dependencies:
   intl: ^0.20.2
   flutter_local_notifications: ^19.1.0
   permission_handler: ^11.0.1
+  
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.2
+  http_mock_adapter: ^0.6.1
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

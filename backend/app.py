@@ -17,21 +17,18 @@ USERNAME = 'phishingdetection'
 PASSWORD = 'Pass@123'
 DRIVER = '{ODBC Driver 17 for SQL Server}'  
 
-connection_string = f'DRIVER={DRIVER};SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
+connection = f'DRIVER={DRIVER};SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
 
 # get database connection
 def get_db_connection():
     try:
-        conn = pyodbc.connect(connection_string)
-        return conn
+        con = pyodbc.connect(connection)
+        return con
     except Exception as e:
         print(f"Database connection error: {e}")
         return None
 
-#function for password hashing 
-def hash_password(password):
 
-    return hashlib.sha256(password.encode()).hexdigest()
 
 # risk calculation 
 def get_risk_level(probability):
@@ -49,40 +46,34 @@ def get_risk_color(level):
         return 'yellow'
     else:
         return 'green'
+    
+#function for password hashing 
+def hash_password(password):
 
-@app.route('/api/auth/login', methods=['POST'])
+    return hashlib.sha256(password.encode()).hexdigest()    
+
+@app.route ('/api/auth/login', methods=['POST'])
 def login():
     try:
         data = request.json
         email = data.get('email')
         password = data.get('password')
         
-        if not email or not password:
-            return jsonify({"message": "Email and password are required"}), 400
-        
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
         
-        cursor = conn.cursor()
-        
-
+        cursor = con.cursor()
         cursor.execute("SELECT user_id, password FROM Users WHERE email = ?", (email,))
         user = cursor.fetchone()
         
-        if not user:
-            conn.close()
-            return jsonify({"message": "Invalid credentials"}), 401
         
         stored_password = user.password
-        user_id = user.user_id
-
-
         if hash_password(password) == stored_password:
-            conn.close()
-            return jsonify({"message": "Login successful", "user_id": user_id}), 200
+            con.close()
+            return jsonify({"message": "Login successful"}), 200
         else:
-            conn.close()
+            con.close()
             return jsonify({"message": "Invalid credentials"}), 401
             
     except Exception as e:
@@ -94,16 +85,16 @@ def login():
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     try:
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
         
-        cursor = conn.cursor()
+        cursor = con.cursor()
         cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
         
         
-        conn.commit()
-        conn.close()
+        con.commit()
+        con.close()
         return jsonify({"message": "Account deleted successfully"}), 200
         
     except Exception as e:
@@ -123,11 +114,11 @@ def create_user():
 
         hashed_password = hash_password(password)  
 
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
 
-        cursor = conn.cursor()
+        cursor = con.cursor()
 
 
         cursor.execute(
@@ -138,8 +129,8 @@ def create_user():
 
         user_id = cursor.fetchone()[0]
 
-        conn.commit()
-        conn.close()
+        con.commit()
+        con.close()
 
         return jsonify({"message": "User created successfully", "user_id": user_id}), 201
 
@@ -157,11 +148,11 @@ def save_message(user_id):
         if not message_text:
             return jsonify({"message": "Message text is required"}), 400
             
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
             
-        cursor = conn.cursor()
+        cursor = con.cursor()
         
 
         cursor.execute("""
@@ -169,10 +160,10 @@ def save_message(user_id):
             VALUES (?, ?, ?)
         """, (user_id, message_text, probability))
         
-        conn.commit()
+        con.commit()
         cursor.execute("SELECT @@IDENTITY AS message_id")
         message_id = cursor.fetchone()[0]
-        conn.close()
+        con.close()
       
         return jsonify({
             "message": "Message saved successfully",
@@ -186,18 +177,18 @@ def save_message(user_id):
 @app.route('/api/users/<int:user_id>/messages', methods=["GET"])
 def get_user_messages(user_id):
     try:
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
 
-        cursor = conn.cursor()
+        cursor = con.cursor()
         cursor.execute("""
             SELECT message_id, message_text, probability 
             FROM Messages 
             WHERE user_id = ?
         """, (user_id,))
         rows = cursor.fetchall()
-        conn.close()
+        con.close()
 
         messages = []
         for row in rows:
@@ -222,23 +213,17 @@ def get_user_messages(user_id):
 
 
 def is_arabic(text):
-
     return re.search(r'[\u0600-\u06FF]', text) is not None
-
-
 def translate_to_english(text):
     url = "https://api.lecto.ai/v1/translate/text"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "X-API-Key": "78JG77E-TJS4NRF-KJYAEWP-8J15GYS"  
-    }
+        "X-API-Key": "78JG77E-TJS4NRF-KJYAEWP-8J15GYS"  }
     payload = {
         "texts": [text],
         "to": ["en"],
-        "from": "ar"
-    }
-
+        "from": "ar"}
     try:
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
@@ -246,13 +231,10 @@ def translate_to_english(text):
         translated_text = result['translations'][0]['translated'][0]
         print(f"Original Arabic: {text}")
         print(f"Translated English: {translated_text}")
-        
         return translated_text
     except requests.RequestException as e:
         print(f"Lecto API translation error: {e}")
         return text
-    
-
 @app.route('/api/phishing/check', methods=['POST'])
 def check_phishing():
     try:
@@ -260,28 +242,22 @@ def check_phishing():
         message_list = data.get('messages', [])
         if not message_list:
             return jsonify({"message": "No message provided"}), 400
-
         message = message_list[0]
-
         if is_arabic(message):
             message = translate_to_english(message)
-            
         # request to Azure endpoint
         azure_url = 'http://a11f61e4-15b8-4d6c-ac82-0a78b136ef5c.eastus.azurecontainer.io/score'
         request_data = {"data": [message]}
         body = json.dumps(request_data).encode('utf-8')
-        
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
-        
         req = urllib.request.Request(azure_url, body, headers)
         response = urllib.request.urlopen(req)
         result = response.read().decode('utf-8')
         parsed_result = json.loads(result)
         return parsed_result, 200
-        
     except urllib.error.HTTPError as e:
         return jsonify({"message": f"Error from ML service: {e.reason}", "code": e.code}), e.code
     except Exception as e:
@@ -292,11 +268,11 @@ def check_phishing():
 @app.route('/api/users/<int:user_id>/messages/<int:message_id>', methods=['DELETE'])
 def delete_user_message(user_id, message_id):
     try:
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
 
-        cursor = conn.cursor()
+        cursor = con.cursor()
 
         cursor.execute("""
             DELETE FROM Messages 
@@ -304,11 +280,11 @@ def delete_user_message(user_id, message_id):
         """, (message_id, user_id))
         
         if cursor.rowcount == 0:
-            conn.close()
+            con.close()
             return jsonify({"message": "Message not found or doesn't belong to user"}), 404
 
-        conn.commit()
-        conn.close()
+        con.commit()
+        con.close()
         return jsonify({"message": "Message deleted successfully"}), 200
 
     except Exception as e:
@@ -318,14 +294,14 @@ def delete_user_message(user_id, message_id):
 @app.route('/api/users/<int:user_id>/messages', methods=['DELETE'])
 def delete_all_messages(user_id):
     try:
-        conn = get_db_connection()
-        if not conn:
+        con = get_db_connection()
+        if not con:
             return jsonify({"message": "Database connection error"}), 500
 
-        cursor = conn.cursor()
+        cursor = con.cursor()
         cursor.execute("DELETE FROM Messages WHERE user_id = ?", (user_id,))
-        conn.commit()
-        conn.close()
+        con.commit()
+        con.close()
         return jsonify({"message": "All messages deleted successfully"}), 200
 
     except Exception as e:

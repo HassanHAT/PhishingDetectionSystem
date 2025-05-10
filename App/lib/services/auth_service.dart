@@ -7,7 +7,7 @@ class AuthService {
   Future<bool> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.authEndpoint}/login'),
+        Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -52,9 +52,8 @@ class AuthService {
 
       if (userId == null) return false;
 
-      // API call to delete user from Python backend
       final response = await http.delete(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.userEndpoint}/$userId'),
+        Uri.parse('${ApiConfig.baseUrl}/api/users/$userId'),
       );
 
       if (response.statusCode == 200) {
@@ -78,11 +77,7 @@ class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          // Encode to JSON
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       print('Status Code: ${response.statusCode}');

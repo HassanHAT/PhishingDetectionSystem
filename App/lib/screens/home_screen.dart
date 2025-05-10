@@ -152,44 +152,24 @@ class HomeScreenState extends State<HomeScreen> {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: ListTile(
-            title: Text(
-              message.text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+        return Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: message.risk.color, width: 10),
             ),
-            subtitle: Text(
-              'Result: ${message.risk.displayText.toUpperCase()} \nRisk: ${message.risk.level.toUpperCase()}',
-              style: TextStyle(color: message.risk.color),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () async {
-                setState(() {
-                  isLoading = true; // Show loading state
-                });
-                try {
-                  await phishingService.deleteMessage(message.messageId);
-                  await loadMessages();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Failed to delete message: ${e.toString()}',
-                      ),
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                } finally {
-                  if (mounted) {
-                    setState(() {
-                      isLoading = false;
-                    });
-                  }
-                }
-              },
+          ),
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: ListTile(
+              title: Text(
+                message.text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                'Result: ${message.risk.displayText.toUpperCase()} \nRisk: ${message.risk.level.toUpperCase()}',
+                style: TextStyle(color: message.risk.color),
+              ),
             ),
           ),
         );
