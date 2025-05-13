@@ -18,7 +18,7 @@ class AuthService {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_id', userId);
-
+        await prefs.setString('user_email', email);
         return true;
       } else {
         print('Login failed: ${response.body}');
@@ -33,6 +33,11 @@ class AuthService {
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.containsKey('user_id');
+  }
+
+  Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_email');
   }
 
   Future<String?> getUserId() async {

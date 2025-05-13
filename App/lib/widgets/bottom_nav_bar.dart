@@ -9,7 +9,8 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      items: [
+      currentIndex: currentIndex,
+      items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.search),
@@ -20,7 +21,6 @@ class BottomNavBar extends StatelessWidget {
           label: 'Account',
         ),
       ],
-
       onTap: (index) {
         if (index == currentIndex) return;
 
@@ -29,19 +29,33 @@ class BottomNavBar extends StatelessWidget {
         } else if (index == 1) {
           Navigator.of(context).pushReplacementNamed('/check');
         } else if (index == 2) {
-          showAccountOptions(context);
+          showAccountDialog(context);
         }
       },
     );
   }
 
-  void showAccountOptions(BuildContext context) {
+  Future<void> showAccountDialog(BuildContext context) async {
+    final AuthService authService = AuthService();
+    final String? userEmail = await authService.getUserEmail();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Account Options'),
-          content: const Text('What would you like to do?'),
+          title: const Text('Account'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${userEmail ?? 'Not available'}',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+              const Text('What would you like to do?'),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -73,9 +87,7 @@ class BottomNavBar extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Account'),
-          content: const Text(
-            'Are you sure you want to delete your account? This action cannot be undone.',
-          ),
+          content: const Text('Are you sure you want to delete your account?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -89,7 +101,15 @@ class BottomNavBar extends StatelessWidget {
                 final success = await authService.deleteAccount();
 
                 if (success) {
-                  Navigator.of(context).pushReplacementNamed('/login');
+                  // Explicitly clear the user session
+                  await authService.logout();
+
+                  // Navigate to login page
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false, // Remove all previous routes
+                  );
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Account deleted successfully'),

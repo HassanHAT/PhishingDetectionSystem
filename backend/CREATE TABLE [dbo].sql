@@ -3,7 +3,6 @@ CREATE TABLE [dbo].[Messages] (
     [user_id]      INT            NOT NULL,
     [message_text] NVARCHAR (MAX) NOT NULL,
     [probability]  FLOAT    NOT NULL,
-    [created_time] DATETIME       DEFAULT GETDATE(),
     CONSTRAINT [PK_Messages] PRIMARY KEY CLUSTERED ([message_id] ASC),
     CONSTRAINT [user_id] FOREIGN KEY ([user_id]) REFERENCES [dbo].[Users] ([user_id])
 );

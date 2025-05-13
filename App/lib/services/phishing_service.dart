@@ -63,7 +63,9 @@ class PhishingService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'message': messageText, 'probability': probability}),
       );
-
+      print('Posting to: ${ApiConfig.baseUrl}/api/users/$userId/messages');
+      print('userId: $userId');
+      print('Saving message: $messageText with probability: $probability');
       print('Save message response: ${response.statusCode} ${response.body}');
       if (response.statusCode != 201) {
         throw Exception('Failed to save message: ${response.body}');

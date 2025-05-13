@@ -66,12 +66,17 @@ def login():
         cursor = con.cursor()
         cursor.execute("SELECT user_id, password FROM Users WHERE email = ?", (email,))
         user = cursor.fetchone()
-        
-        
-        stored_password = user.password
+        if not user:
+         con.close()
+         return jsonify({"message": "Invalid credentials"}), 401
+
+        stored_password = user.password 
+        user_id = user.user_id
+
+        # If you're hashing passwords, hash this for comparison
         if hash_password(password) == stored_password:
             con.close()
-            return jsonify({"message": "Login successful"}), 200
+            return jsonify({"message": "Login successful", "user_id": user_id}), 200
         else:
             con.close()
             return jsonify({"message": "Invalid credentials"}), 401
@@ -90,8 +95,11 @@ def delete_user(user_id):
             return jsonify({"message": "Database connection error"}), 500
         
         cursor = con.cursor()
-        cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
+        # First, delete all messages associated with the user
+        cursor.execute("DELETE FROM Messages WHERE user_id = ?", (user_id,))
         
+        # Now delete the user
+        cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
         
         con.commit()
         con.close()
@@ -246,18 +254,20 @@ def check_phishing():
         if is_arabic(message):
             message = translate_to_english(message)
         # request to Azure endpoint
-        azure_url = 'http://a11f61e4-15b8-4d6c-ac82-0a78b136ef5c.eastus.azurecontainer.io/score'
+        azure_url = 'http://8c8f7204-18ea-4817-9651-f2005618615b.eastus.azurecontainer.io/score'
         request_data = {"data": [message]}
         body = json.dumps(request_data).encode('utf-8')
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
+        
         req = urllib.request.Request(azure_url, body, headers)
         response = urllib.request.urlopen(req)
         result = response.read().decode('utf-8')
         parsed_result = json.loads(result)
         return parsed_result, 200
+        
     except urllib.error.HTTPError as e:
         return jsonify({"message": f"Error from ML service: {e.reason}", "code": e.code}), e.code
     except Exception as e:
