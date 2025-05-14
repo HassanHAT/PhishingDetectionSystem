@@ -3,8 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
+//service classs to handle user opertaion to call to the backend
 class AuthService {
   Future<bool> login(String email, String password) async {
+    //request to login user
     try {
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
@@ -50,6 +52,7 @@ class AuthService {
     await prefs.remove('user_id');
   }
 
+  //method to delete user account with their crosspond user id
   Future<bool> deleteAccount() async {
     try {
       final prefs = await SharedPreferences.getInstance();

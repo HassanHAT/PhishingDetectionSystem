@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// Message class to represent pishing results
 class Message {
   final int messageId;
   final String text;
@@ -15,7 +16,7 @@ class Message {
     RiskLevel? risk,
   }) : risk = risk ?? calculateRisk(probability),
        timestamp = timestamp ?? DateTime.now();
-
+  //Extract result and use null checker if missing
   factory Message.fromJson(Map<String, dynamic> json) {
     final text = json['message']?.toString() ?? 'Unknown message';
     final prob = (json['probability'] as num?)?.toDouble() ?? 0.0;
@@ -34,6 +35,7 @@ class Message {
     );
   }
 
+  //Static method to represent risks reuslts with color, levels and text to dispplay
   static RiskLevel calculateRisk(double probability) {
     if (probability > 15) {
       return RiskLevel(

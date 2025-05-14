@@ -13,9 +13,10 @@ class CheckMessageScreen extends StatefulWidget {
 
 class _CheckMessageScreenState extends State<CheckMessageScreen> {
   final formKey = GlobalKey<FormState>();
-  final TextEditingController messageController = TextEditingController();
+  final TextEditingController messageController =
+      TextEditingController(); //controller editor for text
   final PhishingService phishingService = PhishingService();
-
+  //track if api is in progress requesting and updating page
   bool isLoading = false;
   bool hasResult = false;
   late Message _result;
@@ -33,7 +34,7 @@ class _CheckMessageScreenState extends State<CheckMessageScreen> {
     try {
       final message = messageController.text;
       final result = await phishingService.checkMessage(message);
-
+      //update interface to show loading
       setState(() {
         _result = result;
         hasResult = true;

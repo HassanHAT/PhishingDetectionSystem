@@ -6,7 +6,7 @@ import 'auth_service.dart';
 
 class PhishingService {
   final AuthService _authService = AuthService();
-
+  //fetches all messages for users
   Future<List<Message>> getUserMessages() async {
     final userId = await _authService.getUserId();
     if (userId == null) return [];
@@ -18,7 +18,7 @@ class PhishingService {
       print('Failed to fetch messages: ${resp.statusCode}');
       return [];
     }
-
+    //parse reposnd body and extract result array
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
     final list = data['results'] as List<dynamic>? ?? [];
     return list
@@ -26,6 +26,7 @@ class PhishingService {
         .toList();
   }
 
+  //check if message is phishing by sending request to backend
   Future<Message> checkMessage(String message) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/phishing/check');
     final resp = await http.post(
@@ -76,7 +77,7 @@ class PhishingService {
     }
   }
 
-  /// Deletes a specific message for this user.
+  // deletes a specific message for this user
   Future<void> deleteMessage(int messageId) async {
     final userId = await _authService.getUserId();
     if (userId == null) return;
@@ -92,7 +93,7 @@ class PhishingService {
     }
   }
 
-  /// Deletes all messages for this user.
+  //deletes all messages for this user
   Future<void> deleteAllMessages() async {
     final userId = await _authService.getUserId();
     if (userId == null) return;
