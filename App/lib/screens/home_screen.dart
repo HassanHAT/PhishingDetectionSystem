@@ -14,6 +14,7 @@ class HomeScreen extends StatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
+//create instance of every class needed
 class HomeScreenState extends State<HomeScreen> {
   final PhishingService phishingService = PhishingService();
   final AuthService authService = AuthService();
@@ -22,7 +23,7 @@ class HomeScreenState extends State<HomeScreen> {
   bool isLoading = false;
   String errorMessage = '';
   List<Message> messages = [];
-
+  //intiallize the page for widget
   @override
   void initState() {
     super.initState();
@@ -31,6 +32,7 @@ class HomeScreenState extends State<HomeScreen> {
     loadMessages();
   }
 
+  //Reguest SMS Permission for user when first sign in for application
   Future<void> requestSmsPermissions() async {
     final granted = await telephony.requestPhoneAndSmsPermissions;
     if (granted != true) {
@@ -38,6 +40,7 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  //load messages from database for user
   Future<void> loadMessages() async {
     if (!mounted) return;
     setState(() {
@@ -46,7 +49,8 @@ class HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final msgs = await phishingService.getUserMessages();
+      final msgs =
+          await phishingService.getUserMessages(); //fetch messages for user
       setState(() {
         messages = msgs.where((m) => m.risk.level != 'low').toList();
       });
@@ -57,18 +61,24 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  //listener for incoming messages
   void startListening() {
     telephony.listenIncomingSms(
       onNewMessage: (SmsMessage sms) async {
+        //callback when message is received
         if (sms.body == null) return;
         final body = sms.body!;
 
         setState(() => isLoading = true);
         try {
-          final result = await phishingService.checkMessage(body);
+          final result = await phishingService.checkMessage(
+            body,
+          ); //check for phishing
 
           if (result.risk.level != 'low') {
+            //if not low risk save it and notify alert
             await NotificationService.showNotification(
+              //show notification from the class if phishing
               'Potential Phishing Detected!',
               '${result.risk.level.toUpperCase()} risk message: ${result.text.substring(0, 30)}...',
             );
@@ -76,6 +86,7 @@ class HomeScreenState extends State<HomeScreen> {
             final userId = await authService.getUserId();
             if (userId != null) {
               await phishingService.saveMessageToDatabase(
+                //save message to database
                 userId: userId,
                 messageText: result.text,
                 probability: result.probability,
@@ -94,6 +105,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  //ui page build
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,7 +121,8 @@ class HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.delete_forever),
             tooltip: 'Delete all messages',
             onPressed: () async {
-              await phishingService.deleteAllMessages();
+              await phishingService
+                  .deleteAllMessages(); //icon for delete all messages when pressed
               await loadMessages();
             },
           ),
@@ -120,6 +133,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  //build page based on current state
   Widget _buildBody() {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -146,7 +160,7 @@ class HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-
+    //lists of messages shown to user
     return ListView.separated(
       padding: const EdgeInsets.all(8),
       itemCount: messages.length,
@@ -154,6 +168,7 @@ class HomeScreenState extends State<HomeScreen> {
         final message = messages[index];
         return Container(
           decoration: BoxDecoration(
+            //border in the left indicate the levels of risk for each message
             border: Border(
               left: BorderSide(color: message.risk.color, width: 10),
             ),

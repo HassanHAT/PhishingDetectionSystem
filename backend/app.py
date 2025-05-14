@@ -30,7 +30,7 @@ def get_db_connection():
 
 
 
-# risk calculation 
+# risk calculation on the fly
 def get_risk_level(probability):
     if probability > 15:
         return 'high'
@@ -73,7 +73,7 @@ def login():
         stored_password = user.password 
         user_id = user.user_id
 
-        # If you're hashing passwords, hash this for comparison
+        #  hash for comparison
         if hash_password(password) == stored_password:
             con.close()
             return jsonify({"message": "Login successful", "user_id": user_id}), 200
@@ -95,10 +95,9 @@ def delete_user(user_id):
             return jsonify({"message": "Database connection error"}), 500
         
         cursor = con.cursor()
-        # First, delete all messages associated with the user
+        # delete all messages associated with the user
         cursor.execute("DELETE FROM Messages WHERE user_id = ?", (user_id,))
         
-        # Now delete the user
         cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
         
         con.commit()
@@ -219,7 +218,7 @@ def get_user_messages(user_id):
 
 
 
-
+# methods to translate before checking with LECTO AI API
 def is_arabic(text):
     return re.search(r'[\u0600-\u06FF]', text) is not None
 def translate_to_english(text):
@@ -253,7 +252,7 @@ def check_phishing():
         message = message_list[0]
         if is_arabic(message):
             message = translate_to_english(message)
-        # request to Azure endpoint
+        # request to Azure endpoint for our ML Model 
         azure_url = 'http://8c8f7204-18ea-4817-9651-f2005618615b.eastus.azurecontainer.io/score'
         request_data = {"data": [message]}
         body = json.dumps(request_data).encode('utf-8')
