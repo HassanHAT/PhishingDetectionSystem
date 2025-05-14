@@ -33,14 +33,11 @@ def run(raw_data):
         data = json.loads(raw_data)
         messages = data['data']
 
-        # Extract features
         features = extract_features(messages)
 
-        # Predict
         probabilities = model.predict_proba(features)[:, 1] * 100
         predictions = model.predict(features)
 
-        # Format result
         results = []
         for msg, pred, prob in zip(messages, predictions, probabilities):
             if prob > 15:

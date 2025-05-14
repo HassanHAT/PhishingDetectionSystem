@@ -3,9 +3,6 @@ import pandas as pd
 import re
 import joblib
 
-# ------------------------
-# Feature extraction function
-# ------------------------
 def extract_features(texts):
     features = pd.DataFrame({
         'length': [len(text) for text in texts],
